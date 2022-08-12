@@ -3,6 +3,8 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
+const session = require("express-session");
+const FileStore = require("session-file-store")(session);
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
@@ -31,41 +33,30 @@ app.set('view engine', 'jade');
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser("Sample Cookie Parser Key"));
+// app.use(cookieParser("Sample Cookie Parser Key"));
+
+app.use(session({
+  name: "session-id",
+  secret: "Sample Cookie Parser Key",
+  saveUninitialized: false,
+  resave: false,
+  store: new FileStore({ path: "./sessions/", retries: 0})
+}));
+
+
+app.use('/', indexRouter);
+app.use('/users', usersRouter);
 
 const auth = (req, res, next) => {
-  console.log(req.signedCookies);
+  console.log("Session information: ", req.session);
 
-  if (!req.signedCookies.user) {
-    var authHeader = req.headers.authorization;
-
-    if (!authHeader) {
-      res.setHeader("www-authenticate", "Basic");
+  if (!req.session.user) {
       let error = new Error("You are not authenticated");
       error.status = 401;
       return next(error);
-    }
-
-    let auth = new Buffer.from(authHeader.split(" ")[1], "base64").toString().split(":");
-
-    let username = auth[0];
-    let password = auth[1];
-
-    //only for demonstration purpose
-    if (username === "admin" && password === "password") {
-      //will send the cookie back the client side
-      res.cookie("user", "admin", {signed: true});
-      next();
-    }
-    else {
-      res.setHeader("www-authenticate", "Basic");
-      let error = new Error("You are not authenticated");
-      error.status = 401;
-      return next(error);
-    }
   }
   else {
-    if(req.signedCookies.user === "admin"){
+    if(req.session.user === "authenticated"){
       next();
     }
     else{
@@ -79,9 +70,6 @@ const auth = (req, res, next) => {
 app.use(auth);
 
 app.use(express.static(path.join(__dirname, 'public')));
-
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
 app.use("/dishes", dishRouter);
 app.use("/promotions", promoRouter);
 app.use("/leaders", leaderRouter);
