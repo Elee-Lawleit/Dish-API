@@ -3,6 +3,7 @@ const bodyParser = require("body-parser");
 const router = express.Router();
 const userModel = require("../models/userModel");
 const passport = require("passport");
+const authenticate = require("../authenticate")
 
 router.use(bodyParser.json());
 
@@ -32,9 +33,10 @@ router.post("/signup", async (req, res, next) => {
 });
 
 router.post("/login", passport.authenticate("local"), (req, res, next) => {
+  const token = authenticate.getToken({ _id: req.user._id });
   res.statusCode = 200;
   res.setHeader("Content-Type", "application/json");
-  res.end("You are authenticated ;) Continue using the API~");
+  res.json({ message: "You are authenticated ;) Continue using the API~", token: token });
 });
 
 router.get("/logout", (req, res, next) => {
