@@ -35,38 +35,13 @@ app.set('view engine', 'pug');
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-// app.use(cookieParser("Sample Cookie Parser Key"));
 
-app.use(session({
-  name: "session-id",
-  secret: "Sample Cookie Parser Key",
-  saveUninitialized: false,
-  resave: false,
-  store: new FileStore({ path: "./sessions/", retries: 0})
-}));
 
 app.use(passport.initialize());
-app.use(passport.session());
 
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
-
-const auth = (req, res, next) => {
-  console.log("Session information: ", req.session);
-
-  if (!req.user) {
-      let error = new Error("You are not authenticated");
-      error.status = 401;
-      return next(error);
-  }
-  else {
-    console.log("--------------------------", req.user, "--------------------------");
-    next();
-  }
-}
-
-app.use(auth);
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use("/dishes", dishRouter);
