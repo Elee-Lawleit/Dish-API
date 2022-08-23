@@ -7,9 +7,20 @@ const authenticate = require("../authenticate");
 
 router.use(bodyParser.json());
 
-router.get("/", function (req, res, next) {
-  res.send("respond with a resource");
-});
+router.get(
+  "/",
+  authenticate.verifyUser,
+  authenticate.verifyAdmin,
+  async (req, res, next) => {
+    try {
+      const users = await userModel.find({});
+      console.log(users);
+      res.json(users);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 router.post("/signup", async (req, res, next) => {
   userModel.register(
@@ -36,7 +47,10 @@ router.post("/signup", async (req, res, next) => {
   );
 });
 
-router.post("/login", passport.authenticate("local", {session: false}), (req, res, next) => {
+router.post(
+  "/login",
+  passport.authenticate("local", { session: false }),
+  (req, res, next) => {
     const token = authenticate.getToken({ _id: req.user._id });
     console.log("This is token information: ", token);
     res.statusCode = 200;
@@ -50,8 +64,6 @@ router.post("/login", passport.authenticate("local", {session: false}), (req, re
 
 router.get("/logout", (req, res, next) => {
   if (req.user) {
-    req.session.destroy();
-    res.clearCookie("session-id");
     res.redirect("/");
   } else {
     let error = new Error("You aren't logged in!");

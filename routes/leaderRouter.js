@@ -57,11 +57,11 @@ leaderRouter
       })
       .catch((error) => next(error));
   })
-  .post(authenticate.verifyUser, (req, res, next) => {
+  .post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     res.statusCode = 403;
     res.end(`POST operation not supported on /leaders/${req.params.leaderId}`);
   })
-  .put(authenticate.verifyUser, (req, res, next) => {
+  .put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     leaderModel
       .findByIdAndUpdate(req.params.leaderId, { $set: req.body }, { new: true })
       .then((leader) => {
@@ -71,15 +71,19 @@ leaderRouter
       })
       .catch((error) => next(error));
   })
-  .delete(authenticate.verifyUser, (req, res, next) => {
-    leaderModel
-      .findByIdAndDelete(req.params.leaderId)
-      .then((result) => {
-        res.statusCode = 200;
-        res.setHeader("Content-Type", "application/json");
-        res.json(result);
-      })
-      .catch((error) => next(error));
-  });
+  .delete(
+    authenticate.verifyUser,
+    authenticate.verifyAdmin,
+    (req, res, next) => {
+      leaderModel
+        .findByIdAndDelete(req.params.leaderId)
+        .then((result) => {
+          res.statusCode = 200;
+          res.setHeader("Content-Type", "application/json");
+          res.json(result);
+        })
+        .catch((error) => next(error));
+    }
+  );
 
 module.exports = leaderRouter;

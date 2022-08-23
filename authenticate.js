@@ -10,7 +10,7 @@ const jwt = require("jsonwebtoken");
 
 //authenticate is deprecated, should use createStrategy() instead
 
-exports.local = passport.use(new LocalStrategy(userModel.authenticate()));
+passport.use(new LocalStrategy(userModel.authenticate()));
 
 //to handle sessions with passport
 //these are provided by passportLocalMongoose as well i.e., userModel.serializeUser() & vice versa
@@ -29,7 +29,7 @@ options.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
 options.secretOrKey = "my secret key";
 
 //takes options and authentication function
-exports.jwtPassport = passport.use(new JwtStrategy(options, async(jwt_payload, done) => {
+passport.use(new JwtStrategy(options, async(jwt_payload, done) => {
     console.log("JSON TOKEN PAYLOAD: ", jwt_payload);
     try {
         var user = await userModel.findOne({ _id: jwt_payload._id });
@@ -43,3 +43,14 @@ exports.jwtPassport = passport.use(new JwtStrategy(options, async(jwt_payload, d
 }));
 
 exports.verifyUser = passport.authenticate("jwt", { session: false });
+
+exports.verifyAdmin = (req, res, next)=>{
+    if(req.user.admin === true){
+        next();
+    }
+    else{
+        let error = new Error("You are not allowed to perform this operation!");
+        error.status = 403;
+        next(error);
+    }
+}
