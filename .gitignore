@@ -1,2 +1,5 @@
 node_modules
 sessions
+
+# not ignoring the certificate files because they are self generated 
+# and I want to seem cool

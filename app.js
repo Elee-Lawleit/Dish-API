@@ -28,6 +28,17 @@ connection.then((db) => {
 
 const app = express();
 
+//redirects all requests to secure server (https)
+app.all("*", (req, res, next)=>{
+  if(req.secure){
+    return next();
+  }
+  else{
+    //307 is to indicate redirection
+    res.redirect(307, `https://${req.hostname}:${app.get("securePort")}${req.url}`);
+  }
+})
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
